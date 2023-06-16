@@ -2,6 +2,7 @@
 #![no_main]
 
 use core::panic::PanicInfo;
+mod vga_buffer;
 
 static HELLO: &[u8] = b"Hello world!err";
 
