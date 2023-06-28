@@ -7,3 +7,6 @@ target = "x86_64-blog_os.json"
 
 # [target.'cfg(target_os = "none")']
 # runner = "bootimage runner"
+
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"
