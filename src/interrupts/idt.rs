@@ -1,7 +1,8 @@
 use x86_64::instructions::segmentation;
 use x86_64::structures::gdt::SegmentSelector;
-use x86_64::PrivilegeLevel;
+use x86_64::{PrivilegeLevel, VirtAddr};
 use bit_field::BitField;
+
 
 pub struct Idt([Entry; 16]);
 
@@ -10,34 +11,21 @@ impl Idt {
         Idt([Entry::missing(); 16])
     }
     
-    pub fn set_handler(&mut self, entry: u8, handler: HandlerFunc) -> &mut EntryOptions {
+    pub fn set_handler(&mut self, entry: u8, handler: HandlerFunc) -> EntryOptions {
         self.0[entry as usize] = Entry::new(segmentation::cs(), handler);
-        &mut self.0[entry as usize].options
+        self.0[entry as usize].options
     }
 
-    pub fn load(&self) {
+    pub fn load(&'static self) {
         use x86_64::instructions::tables::{DescriptorTablePointer, lidt};
         use core::mem::size_of;
 
         let ptr = DescriptorTablePointer {
-            base: self as *const _ as u64,
+            base: VirtAddr::new(self as *const _ as u64),
             limit: (size_of::<Self>() - 1) as u16,
         };
 
         unsafe { lidt(&ptr) };
-    }
-}
-
-impl Entry {
-    fn missing() -> Self {
-        Entry {
-            gdt_selector: SegmentSelector::new(0, PrivilegeLevel::Ring0),
-            pointer_low: 0,
-            pointer_middle: 0,
-            pointer_high: 0,
-            options: EntryOptions::minimal(),
-            reserved: 0,
-        }
     }
 }
 
@@ -64,6 +52,17 @@ impl Entry {
             pointer_middle: (pointer >> 16) as u16,
             pointer_high: (pointer >> 32) as u32,
             options: EntryOptions::new(),
+            reserved: 0,
+        }
+    }
+
+        fn missing() -> Self {
+        Entry {
+            gdt_selector: SegmentSelector::new(0, PrivilegeLevel::Ring0),
+            pointer_low: 0,
+            pointer_middle: 0,
+            pointer_high: 0,
+            options: EntryOptions::minimal(),
             reserved: 0,
         }
     }

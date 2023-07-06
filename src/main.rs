@@ -4,20 +4,35 @@
 #![test_runner(os_rust::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use core::panic::PanicInfo;
+use core::{panic::PanicInfo, arch::asm};
 use os_rust::println;
+
+use crate::interrupts::init;
+
+mod interrupts;
 
 static HELLO: &[u8] = b"Hello world!err";
 
 #[no_mangle]
 pub extern "C" fn _start() -> !{
     println!("Hello World{}", "!");
+    // initialize our IDT
+    init();
+
+    // provoke a divide-by-zero fault
+    divide_by_zero();
 
     #[cfg(test)]
     test_main();
 
     loop {}
 }
+fn divide_by_zero() {
+    unsafe {
+        asm!("mov dx, 0; div dx")
+    }
+}
+
 
 #[cfg(not(test))]
 #[panic_handler]
