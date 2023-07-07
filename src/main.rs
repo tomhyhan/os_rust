@@ -7,24 +7,28 @@
 use core::{panic::PanicInfo, arch::asm};
 use os_rust::println;
 
-use crate::interrupts::init;
-
-mod interrupts;
-
 static HELLO: &[u8] = b"Hello world!err";
 
 #[no_mangle]
 pub extern "C" fn _start() -> !{
     println!("Hello World{}", "!");
-    // initialize our IDT
-    init();
 
-    // provoke a divide-by-zero fault
-    divide_by_zero();
+    os_rust::init(); // new
+    
+    // divide_by_zero();
+    // invoke a breakpoint exception
+    x86_64::instructions::interrupts::int3(); // new
 
+    // trigger a page fault
+    unsafe {
+        *(0xdeadbeef as *mut u8) = 42;
+    };
+
+    // as before
     #[cfg(test)]
     test_main();
 
+    println!("It did not crash!");
     loop {}
 }
 fn divide_by_zero() {
