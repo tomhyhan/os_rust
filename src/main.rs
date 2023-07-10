@@ -13,17 +13,20 @@ static HELLO: &[u8] = b"Hello world!err";
 pub extern "C" fn _start() -> !{
     println!("Hello World{}", "!");
 
-    os_rust::init(); // new
+    os_rust::init(); 
     
     // divide_by_zero();
     // invoke a breakpoint exception
-    x86_64::instructions::interrupts::int3(); // new
+    // x86_64::instructions::interrupts::int3(); 
 
     // trigger a page fault
-    unsafe {
-        *(0xdeadbeef as *mut u8) = 42;
-    };
-
+    // unsafe {
+    //     *(0xdeadbeef as *mut u8) = 42;
+    // };
+    fn stack_overflow() {
+        stack_overflow(); // for each recursion, the return address is pushed
+    }
+    stack_overflow();
     // as before
     #[cfg(test)]
     test_main();
