@@ -23,10 +23,10 @@ pub extern "C" fn _start() -> !{
     // unsafe {
     //     *(0xdeadbeef as *mut u8) = 42;
     // };
-    fn stack_overflow() {
-        stack_overflow(); // for each recursion, the return address is pushed
-    }
-    stack_overflow();
+    // fn stack_overflow() {
+    //     stack_overflow(); // for each recursion, the return address is pushed
+    // }
+    // stack_overflow();
     // as before
     #[cfg(test)]
     test_main();
@@ -34,11 +34,11 @@ pub extern "C" fn _start() -> !{
     println!("It did not crash!");
     loop {}
 }
-fn divide_by_zero() {
-    unsafe {
-        asm!("mov dx, 0; div dx")
-    }
-}
+// fn divide_by_zero() {
+//     unsafe {
+//         asm!("mov dx, 0; div dx")
+//     }
+// }
 
 
 #[cfg(not(test))]
