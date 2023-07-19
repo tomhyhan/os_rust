@@ -32,10 +32,7 @@ pub extern "C" fn _start() -> !{
     test_main();
 
     println!("It did not crash!");
-    loop {
-        use os_rust::print;
-        print!("-")
-    }
+    os_rust::hlt_loop();
 }
 // fn divide_by_zero() {
 //     unsafe {
