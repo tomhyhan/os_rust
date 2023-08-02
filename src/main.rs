@@ -13,14 +13,16 @@ static HELLO: &[u8] = b"Hello world!err";
 entry_point!(kernel_main);
 
 fn kernel_main(boot_info: &'static BootInfo) -> !{
-    use os_rust::memory::active_level_4_table;
-    use x86_64::VirtAddr;
+    use os_rust::memory;
+    use x86_64::{structures::paging::Translate, VirtAddr};
 
     println!("Hello World{}", "!");
     os_rust::init();
 
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    
+    let mapper = unsafe {
+        memory::init(phys_mem_offset)
+    };
     let addresses = [
         // the identity-mapped vga buffer page
         0xb8000,
@@ -34,9 +36,10 @@ fn kernel_main(boot_info: &'static BootInfo) -> !{
 
     for &address in &addresses {
         let virt = VirtAddr::new(address);
-        let phys = unsafe { translate_addr(virt, phys_mem_offset)  };
+        let phys = mapper.translate_addr(virt);
         println!("{:?} -> {:?}", virt, phys);
     }
+
     // divide_by_zero();
     // invoke a breakpoint exception
     // x86_64::instructions::interrupts::int3(); 
