@@ -6,7 +6,8 @@
 
 use core::{panic::PanicInfo, arch::asm};
 use bootloader::{BootInfo, entry_point};
-use os_rust::{println, memory::translate_addr};
+use os_rust::{println, memory::{translate_addr, BootInfoFrameAllocator}};
+use x86_64::structures::paging::Page;
 
 static HELLO: &[u8] = b"Hello world!err";
 
@@ -20,25 +21,38 @@ fn kernel_main(boot_info: &'static BootInfo) -> !{
     os_rust::init();
 
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mapper = unsafe {
+    let mut mapper = unsafe {
         memory::init(phys_mem_offset)
     };
-    let addresses = [
-        // the identity-mapped vga buffer page
-        0xb8000,
-        // some code page
-        0x201008,
-        // some stack page
-        0x0100_0020_1a10,
-        // virtual address mapped to physical address 0
-        boot_info.physical_memory_offset,
-    ];
 
-    for &address in &addresses {
-        let virt = VirtAddr::new(address);
-        let phys = mapper.translate_addr(virt);
-        println!("{:?} -> {:?}", virt, phys);
-    }
+    let mut frame_allocator = unsafe {
+        BootInfoFrameAllocator::init(&boot_info.memory_map)    
+    };
+    // memory::EmptyFrameAllocator
+
+    // map an unused page
+    let page = Page::containing_address(VirtAddr::new(0xdeadbeaf000));
+    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
+
+    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
+
+    // let addresses = [
+    //     // the identity-mapped vga buffer page
+    //     0xb8000,
+    //     // some code page
+    //     0x201008,
+    //     // some stack page
+    //     0x0100_0020_1a10,
+    //     // virtual address mapped to physical address 0
+    //     boot_info.physical_memory_offset,
+    // ];
+
+    // for &address in &addresses {
+    //     let virt = VirtAddr::new(address);
+    //     let phys = mapper.translate_addr(virt);
+    //     println!("{:?} -> {:?}", virt, phys);
+    // }
 
     // divide_by_zero();
     // invoke a breakpoint exception
