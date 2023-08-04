@@ -4,7 +4,10 @@
 #![test_runner(os_rust::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+extern crate alloc;
+
 use core::{panic::PanicInfo, arch::asm};
+use alloc::boxed::Box;
 use bootloader::{BootInfo, entry_point};
 use os_rust::{println, memory::{translate_addr, BootInfoFrameAllocator}};
 use x86_64::structures::paging::Page;
@@ -36,6 +39,8 @@ fn kernel_main(boot_info: &'static BootInfo) -> !{
 
     let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
     unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
+
+    let x =Box::new(41);
 
     // let addresses = [
     //     // the identity-mapped vga buffer page
