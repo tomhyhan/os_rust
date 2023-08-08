@@ -7,9 +7,9 @@
 extern crate alloc;
 
 use core::{panic::PanicInfo, arch::asm};
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::{Vec, self}, rc::Rc};
 use bootloader::{BootInfo, entry_point};
-use os_rust::{println, memory::{translate_addr, BootInfoFrameAllocator}};
+use os_rust::{println, memory::{translate_addr, BootInfoFrameAllocator}, allocator};
 use x86_64::structures::paging::Page;
 
 static HELLO: &[u8] = b"Hello world!err";
@@ -40,8 +40,22 @@ fn kernel_main(boot_info: &'static BootInfo) -> !{
     let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
     unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
 
-    let x =Box::new(41);
+    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
 
+    let heap_value =Box::new(41);
+    println!("heap value at: {:p}", heap_value);
+
+    let mut vec = Vec::new();
+    for i in 0..500 {
+        vec.push(i)
+    }
+    println!("vec at {:p}", vec.as_slice());
+    
+    let reference_counted = Rc::new(alloc::vec![1,2,3]);
+    let cloned_refence = reference_counted.clone();
+    println!("current refence count is {}", Rc::strong_count(&cloned_refence));
+    core::mem::drop(reference_counted);
+    println!("reference count is now {}", Rc::strong_count(&cloned_refence));
     // let addresses = [
     //     // the identity-mapped vga buffer page
     //     0xb8000,
