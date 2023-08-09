@@ -8,8 +8,15 @@ use x86_64::{
 };
 use linked_list_allocator::LockedHeap;
 
+use crate::println;
+
+use self::bump::BumpAllocator;
+
+pub mod bump;
+
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+// static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 
 pub struct Dummy;
 
@@ -51,4 +58,31 @@ pub fn init_heap(
     }
 
     Ok(())
+}
+
+fn align_up(addr: usize, align: usize) -> usize {
+    println!("addr - {:?}", addr);
+    println!("align - {:?}", align);
+    let remainder = addr % align;
+    if remainder == 0 {
+        addr
+    } else {
+        addr - remainder + align
+    }
+}
+
+pub struct Locked<A> {
+    inner: spin::Mutex<A>
+}
+
+impl<A> Locked<A> {
+    pub const  fn new(inner:A) -> Self {
+        Locked {
+            inner: spin::Mutex::new(inner)
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
+    }
 }
