@@ -13,6 +13,7 @@ use crate::println;
 use self::bump::BumpAllocator;
 
 pub mod bump;
+pub mod linked_list;
 
 #[global_allocator]
 // static ALLOCATOR: LockedHeap = LockedHeap::empty();
@@ -61,14 +62,7 @@ pub fn init_heap(
 }
 
 fn align_up(addr: usize, align: usize) -> usize {
-    println!("addr - {:?}", addr);
-    println!("align - {:?}", align);
-    let remainder = addr % align;
-    if remainder == 0 {
-        addr
-    } else {
-        addr - remainder + align
-    }
+    (addr + align - 1) & !(align - 1)
 }
 
 pub struct Locked<A> {
