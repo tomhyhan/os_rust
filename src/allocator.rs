@@ -7,6 +7,7 @@ use x86_64::{
     VirtAddr,
 };
 use linked_list_allocator::LockedHeap;
+use linked_list::LinkedListAllocator;
 
 use crate::println;
 
@@ -14,10 +15,12 @@ use self::bump::BumpAllocator;
 
 pub mod bump;
 pub mod linked_list;
+pub mod fixed_size_block;
 
 #[global_allocator]
 // static ALLOCATOR: LockedHeap = LockedHeap::empty();
-static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+// static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
 
 pub struct Dummy;
 
