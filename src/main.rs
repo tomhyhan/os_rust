@@ -105,6 +105,15 @@ fn kernel_main(boot_info: &'static BootInfo) -> !{
 //     }
 // }
 
+async fn asnyc_number() -> u32 {
+    42
+}
+
+async fn example_task() {
+    let number = asnyc_number().await;
+    println!("async number: {:?}", nubmer)
+}
+
 
 #[cfg(not(test))]
 #[panic_handler]
