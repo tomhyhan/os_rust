@@ -9,8 +9,9 @@ extern crate alloc;
 use core::{panic::PanicInfo, arch::asm};
 use alloc::{boxed::Box, vec::{Vec, self}, rc::Rc};
 use bootloader::{BootInfo, entry_point};
-use os_rust::{println, memory::{translate_addr, BootInfoFrameAllocator}, allocator};
+use os_rust::{println, memory::{translate_addr, BootInfoFrameAllocator}, allocator, task::simple_executor::SimpleExecutor};
 use x86_64::structures::paging::Page;
+use os_rust::task::{Task};
 
 static HELLO: &[u8] = b"Hello world!err";
 
@@ -56,6 +57,12 @@ fn kernel_main(boot_info: &'static BootInfo) -> !{
     println!("current refence count is {}", Rc::strong_count(&cloned_refence));
     core::mem::drop(reference_counted);
     println!("reference count is now {}", Rc::strong_count(&cloned_refence));
+    
+    // waker
+    let mut executor = SimpleExecutor::new();
+    executor.spawn(Task::new(example_task()));
+    executor.run();
+    
     // let addresses = [
     //     // the identity-mapped vga buffer page
     //     0xb8000,
@@ -111,7 +118,7 @@ async fn asnyc_number() -> u32 {
 
 async fn example_task() {
     let number = asnyc_number().await;
-    println!("async number: {:?}", nubmer)
+    println!("async number: {:?}", number)
 }
 
 
